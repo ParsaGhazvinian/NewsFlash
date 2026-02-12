@@ -2,6 +2,7 @@ package com.example.newsflash.screen
 
 import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.core.screen.Screen
+import com.example.newsflash.model.Article
 import com.example.newsflash.model.Source
 
 object HomePageScreen: Screen{
@@ -10,21 +11,21 @@ object HomePageScreen: Screen{
         HomePage()
     }
 }
-
+data class HistoryPageScreen(
+    val article: List<Article>
+): Screen{
+    @Composable
+    override fun Content() {
+        HistoryPage(article)
+    }
+}
 data class ArticleDetailsScreen(
-    val source: Source,
-    val author: String?,
-    val title: String,
-    val description: String?,
-    val url: String,
-    val urlToImage: String?,
-    val publishedAt: String,
-    val content: String?
+    val article: Article
 ) : Screen {
     @Composable
     override fun Content() {
         ArticleDetails(
-            source,author,title,description,url,urlToImage,publishedAt,content
+            article
         )
     }
 }

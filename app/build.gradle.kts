@@ -70,4 +70,11 @@ dependencies {
     val voyagerVersion = "1.0.1"
     implementation("cafe.adriel.voyager:voyager-navigator:${voyagerVersion}")
     implementation("cafe.adriel.voyager:voyager-tab-navigator:${voyagerVersion}")
+    // DataStore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    // More Icons
+    implementation("androidx.compose.material:material-icons-extended")
+    //Gson
+    implementation("com.google.code.gson:gson:2.10.1")
+
 }

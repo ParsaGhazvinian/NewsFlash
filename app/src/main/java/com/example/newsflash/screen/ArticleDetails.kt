@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,6 +21,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,36 +36,35 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import coil.compose.AsyncImage
+import com.example.newsflash.data.datastore.DataStoreManager
 import com.example.newsflash.model.Article
 import com.example.newsflash.model.Source
 
 @Composable
 fun ArticleDetails(
-    source: Source,
-    author: String?,
-    title: String,
-    description: String?,
-    url: String,
-    urlToImage: String?,
-    publishedAt: String,
-    content: String?
+    article: Article
 ) {
     val context = LocalContext.current
+    val dataStore = remember { DataStoreManager(context) }
+
+    LaunchedEffect(article) {
+        dataStore.addOpenedNews(article)
+    }
+
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxSize().systemBarsPadding()
             .verticalScroll(rememberScrollState())
     ) {
 
-        // IMAGE SECTION
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(260.dp)
         ) {
             AsyncImage(
-                model = urlToImage,
-                contentDescription = title,
+                model = article.urlToImage,
+                contentDescription = article.title,
                 modifier = Modifier
                     .fillMaxSize(),
                 contentScale = ContentScale.Crop
@@ -82,7 +84,7 @@ fun ArticleDetails(
             )
 
             Text(
-                text = title,
+                text = article.title,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
@@ -98,18 +100,17 @@ fun ArticleDetails(
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
 
-            // METADATA ROW
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = source.name,
+                    text = article.source.name,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
 
-                author?.let {
+                article.author?.let {
                     Text(
                         text = "• $it",
                         style = MaterialTheme.typography.labelMedium
@@ -117,7 +118,7 @@ fun ArticleDetails(
                 }
 
                 Text(
-                    text = "• $publishedAt",
+                    text = "• ${article.publishedAt}",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -125,8 +126,7 @@ fun ArticleDetails(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // DESCRIPTION (Summary)
-            description?.let {
+            article.description?.let {
                 Text(
                     text = it,
                     style = MaterialTheme.typography.bodyLarge,
@@ -136,8 +136,7 @@ fun ArticleDetails(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // CONTENT
-            content?.let {
+            article.content?.let {
                 val cleanedContent = it.substringBefore("[+")
                 Text(
                     text = cleanedContent,
@@ -148,10 +147,9 @@ fun ArticleDetails(
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            // READ MORE BUTTON
             Button(
                 onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(article.url))
                     context.startActivity(intent)
                 },
                 modifier = Modifier.fillMaxWidth()

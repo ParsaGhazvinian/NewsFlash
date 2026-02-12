@@ -11,11 +11,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import com.example.newsflash.model.Article
 import com.example.newsflash.network.fetchNews
 import com.example.newsflash.component.ArticleCard
+import com.example.newsflash.component.HomeTopBar
+import com.example.newsflash.data.datastore.DataStoreManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
@@ -25,7 +30,9 @@ fun HomePage() {
     var articles by remember { mutableStateOf<List<Article>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-
+    val context = LocalContext.current
+    val dataStore = remember { DataStoreManager(context) }
+    val isDark by dataStore.darkModeFlow.collectAsState(initial = false)
 //    LaunchedEffect(Unit) {
 //        scope.launch {
 //            isLoading = true
@@ -44,61 +51,55 @@ fun HomePage() {
         isLoading = false
     }
 
+    Scaffold(
+        topBar = {
+            HomeTopBar(
+                isDarkMode = isDark,
+                articles,
+                onHistoryClick = {
+                    navigator?.push(HistoryPageScreen(articles))
+                }
+            )
+        }
+    ) { paddingValues ->
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .animateContentSize()
-    ) {
-        if (isLoading) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                LazyColumn(
-                    contentPadding = PaddingValues(vertical = 8.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            if (isLoading) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    items(
-                        items = articles) { article ->
-                        ArticleCard(
-                            article = article,
-                            onClick = {
-                                navigator?.push(
-                                    ArticleDetailsScreen(
-                                        article.source,
-                                        article.author,
-                                        article.title,
-                                        article.description,
-                                        article.url,
-                                        article.urlToImage,
-                                        article.publishedAt,
-                                        article.content
+                    CircularProgressIndicator()
+                }
+            } else {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    LazyColumn(
+                        contentPadding = PaddingValues(
+                            top = 8.dp,
+                            bottom = 80.dp
+                        )
+                    ) {
+                        items(
+                            items = articles
+                        ) { article ->
+                            ArticleCard(
+                                article = article,
+                                onClick = {
+                                    navigator?.push(
+                                        ArticleDetailsScreen(article)
                                     )
-                                )
-                            })
+                                })
+                        }
                     }
                 }
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .fillMaxWidth()
-                        .height(120.dp)
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f)),
-                                startY = 0.0f,
-                                endY = 100f
-                            )
-                        )
-                        .padding(start = 8.dp, end = 8.dp)
-                )
-            }
 
+            }
         }
     }
 }
+

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import cafe.adriel.voyager.navigator.Navigator
+import com.example.newsflash.data.datastore.DataStoreManager
 import com.example.newsflash.model.Article
 import com.example.newsflash.network.InternetReceiver
 import com.example.newsflash.network.fetchNews
@@ -26,11 +28,12 @@ import com.example.newsflash.screen.HomePageScreen
 import com.example.newsflash.ui.theme.NewsFlashTheme
 import kotlinx.coroutines.launch
 
-private lateinit var internetReceiver: InternetReceiver
 private var articles by mutableStateOf<List<Article>>(emptyList())
 private lateinit var connectivityManager: ConnectivityManager
 private lateinit var networkCallback: ConnectivityManager.NetworkCallback
 private var firstLaunch = true
+
+private lateinit var dataStoreManager: DataStoreManager
 
 
 class MainActivity : ComponentActivity() {
@@ -68,20 +71,24 @@ class MainActivity : ComponentActivity() {
         }
         connectivityManager.registerDefaultNetworkCallback(networkCallback)
 
+        dataStoreManager = DataStoreManager(this)
+
         setContent {
-            NewsFlashTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                    ) {
+            val darkMode by dataStoreManager.darkModeFlow.collectAsState(initial = false)
+            NewsFlashTheme(darkTheme = darkMode) {
+//                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+//                    Box(
+//                        modifier = Modifier
+//                            .fillMaxSize()
+//                            .padding(innerPadding)
+//                    ) {
                         Navigator(HomePageScreen)
-                    }
-                }
+//                    }
+//                }
             }
         }
     }
+
 
     override fun onDestroy() {
         super.onDestroy()
