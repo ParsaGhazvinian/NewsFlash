@@ -2,7 +2,9 @@ package com.example.newsflash
 
 import android.content.IntentFilter
 import android.net.ConnectivityManager
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -72,6 +74,13 @@ class MainActivity : ComponentActivity() {
         connectivityManager.registerDefaultNetworkCallback(networkCallback)
 
         dataStoreManager = DataStoreManager(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions(
+                arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                1001
+            )
+        }
+        Log.d("LiveNews", "Service Created")
 
         setContent {
             val darkMode by dataStoreManager.darkModeFlow.collectAsState(initial = false)

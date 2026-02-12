@@ -20,6 +20,8 @@ class DataStoreManager(private val context: Context) {
 
         val OPENED_NEWS_SET = stringSetPreferencesKey("opened_news_set")
 
+        private val LIVE_UPDATES = booleanPreferencesKey("live_updates")
+
     }
 
     suspend fun saveDarkMode(isDark: Boolean) {
@@ -74,5 +76,16 @@ class DataStoreManager(private val context: Context) {
             it.remove(OPENED_NEWS_SET)
         }
     }
+
+    suspend fun saveLiveUpdates(enabled: Boolean) {
+        context.dataStore.edit { it ->
+            it[LIVE_UPDATES] = enabled
+        }
+    }
+
+    val liveUpdatesFlow: Flow<Boolean> = context.dataStore.data
+        .map { it ->
+            it[LIVE_UPDATES] ?: false
+        }
 
 }

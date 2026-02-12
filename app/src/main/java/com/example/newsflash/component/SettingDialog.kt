@@ -1,5 +1,8 @@
 package com.example.newsflash.component
 
+import android.content.Intent
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,6 +29,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,10 +48,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.newsflash.data.datastore.DataStoreManager
+import com.example.newsflash.service.LiveNewsService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun SettingDialog(
     isDarkMode: Boolean
@@ -54,6 +61,16 @@ fun SettingDialog(
     var isToggled by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val dataStore = remember { DataStoreManager(context) }
+//    var isLiveEnabled by rememberSaveable { mutableStateOf(false) }
+    val liveEnabled by dataStore.liveUpdatesFlow.collectAsState(initial = false)
+
+    LaunchedEffect(liveEnabled) {
+        val intent = Intent(context, LiveNewsService::class.java)
+
+        if (liveEnabled) {
+            context.startForegroundService(intent)
+        }
+    }
 
     IconButton(
         onClick = { isToggled = !isToggled },
@@ -87,7 +104,7 @@ fun SettingDialog(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     Text(
-                        text = "Setting",
+                        text = "Settings",
                         style = MaterialTheme.typography.headlineMedium,
                         modifier = Modifier.padding(12.dp)
                     )
@@ -111,6 +128,35 @@ fun SettingDialog(
                             },
                             modifier = Modifier.weight(1f)
                         )
+                    }
+                    Row {
+                        Text(
+                            text = "Live Updates:",
+                            fontSize = 22.sp,
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .weight(2f),
+                        )
+
+                        Switch(
+                            checked = liveEnabled,
+                            onCheckedChange = { value ->
+
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    dataStore.saveLiveUpdates(value)
+                                }
+
+                                val intent = Intent(context, LiveNewsService::class.java)
+
+                                if (value) {
+                                    context.startForegroundService(intent)
+                                } else {
+                                    context.stopService(intent)
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+
                     }
 //                    HorizontalDivider(Modifier.width(200.dp).align(Alignment.CenterHorizontally), DividerDefaults.Thickness, DividerDefaults.color)
 
