@@ -76,5 +76,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     //Gson
     implementation("com.google.code.gson:gson:2.10.1")
+    //pull to refresh
+    implementation("androidx.compose.material3:material3:1.2.0")
 
 }

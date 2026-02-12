@@ -1,5 +1,6 @@
 package com.example.newsflash.screen
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -23,7 +24,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import androidx.compose.material3.pulltorefresh.*
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePage() {
     val navigator = LocalNavigator.current
@@ -33,6 +37,24 @@ fun HomePage() {
     val context = LocalContext.current
     val dataStore = remember { DataStoreManager(context) }
     val isDark by dataStore.darkModeFlow.collectAsState(initial = false)
+//    val pullRefreshState = rememberPullRefreshState(
+//        refreshing = isLoading,
+//        onRefresh = {
+//            scope.launch {
+//                isLoading = true
+//                articles = fetchNews()
+//                isLoading = false
+//            }
+//        }
+//    )
+    val pullToRefreshState = rememberPullToRefreshState()
+    val onRefresh: () -> Unit = {
+        scope.launch {
+            isLoading = true
+            articles = fetchNews()
+            isLoading = false
+        }
+    }
 //    LaunchedEffect(Unit) {
 //        scope.launch {
 //            isLoading = true
@@ -63,37 +85,46 @@ fun HomePage() {
         }
     ) { paddingValues ->
 
-        Box(
+        PullToRefreshBox(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
+            isRefreshing = isLoading,
+            onRefresh = onRefresh,
+            state = pullToRefreshState
         ) {
-            if (isLoading) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    LazyColumn(
-                        contentPadding = PaddingValues(
-                            top = 8.dp,
-                            bottom = 80.dp
-                        )
-                    ) {
-                        items(
-                            items = articles
-                        ) { article ->
-                            ArticleCard(
-                                article = article,
-                                onClick = {
-                                    navigator?.push(
-                                        ArticleDetailsScreen(article)
-                                    )
-                                })
+            AnimatedContent(
+                targetState = isLoading,
+                label = "loading_animation"
+            ) { loading ->
+
+                if (loading) {
+//                    Column(
+//                        modifier = Modifier.fillMaxSize(),
+//                        verticalArrangement = Arrangement.Center,
+//                        horizontalAlignment = Alignment.CenterHorizontally
+//                    ) {
+//                        CircularProgressIndicator()
+//                    }
+                } else {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        LazyColumn(
+                            contentPadding = PaddingValues(
+                                top = 8.dp,
+                                bottom = 80.dp
+                            )
+                        ) {
+                            items(
+                                items = articles
+                            ) { article ->
+                                ArticleCard(
+                                    article = article,
+                                    onClick = {
+                                        navigator?.push(
+                                            ArticleDetailsScreen(article)
+                                        )
+                                    })
+                            }
                         }
                     }
                 }
